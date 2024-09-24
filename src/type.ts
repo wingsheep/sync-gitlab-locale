@@ -21,6 +21,7 @@ export enum Item {
 
 export enum Env {
   DEV = 'dev',
+  BETA = 'beta',
   PROD = 'prod',
 }
 

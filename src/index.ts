@@ -58,8 +58,8 @@ async function syncLocaleToRemote(project: string, locale: string, content: stri
     project,
   }
 
-  const url = isProd() ? 'http://ingress-ng.hgj.com/overseas-manifest-common/admin/locale/set-message' : 'http://beta-apisix.hgj.com/overseas-manifest-common/admin/locale/set-message'
-  const referer = isProd() ? 'http://manage.hgj.net/' : 'http://beta-manage.hgj.net/'
+  const url = isProd() ? 'http://ingress-ng.hgj.com/overseas-manifest-common/admin/locale/set-message' : `http://${config.env}-apisix.hgj.com/overseas-manifest-common/admin/locale/set-message`
+  const referer = isProd() ? 'http://manage.hgj.net/' : `http://${config.env}-manage.hgj.net/`
   const token = isProd() ? config.prodManagerSessionId : config.managerSessionId
   try {
     const res = await fetch(url, {
