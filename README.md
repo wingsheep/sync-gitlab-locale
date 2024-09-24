@@ -109,3 +109,7 @@ const config: Config = {
 ```bash
 npm install @gitbeaker/rest chalk
 ```
+
+## 示例
+
+![alt text](image.png)
