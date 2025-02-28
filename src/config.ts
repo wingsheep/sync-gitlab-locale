@@ -3,13 +3,13 @@ import { Env, Item } from './type'
 
 const config: Config = {
   env: Env.DEV,
-  managerSessionId: 'baf34212b1ca40ec9a9b7d04b2639707',
-  globalManagerSessionId: '727b610447f24997806e58b36a9b0c8a',
+  managerSessionId: '49b6fee49fab4728b1cc8b51f950fd4b',
+  globalManagerSessionId: '1325ca002db74513a22efb020bf1afd6',
   prodManagerSessionId: '',
   prodGlobalManagerSessionId: '',
-  branch: 'origin/master',
-  include: [Item.ISF],
-  includeGlobal: [Item.ISF],
+  branch: 'release/1.4.7',
+  include: [Item.AFR],
+  includeGlobal: [Item.AFR],
   locale: [
     {
       lang: 'en',
