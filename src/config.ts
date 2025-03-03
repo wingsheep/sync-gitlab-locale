@@ -2,14 +2,12 @@ import type { Config } from './type'
 import { Env, Item } from './type'
 
 const config: Config = {
-  env: Env.DEV,
-  managerSessionId: '49b6fee49fab4728b1cc8b51f950fd4b',
-  globalManagerSessionId: '1325ca002db74513a22efb020bf1afd6',
-  prodManagerSessionId: '',
-  prodGlobalManagerSessionId: '',
+  env: Env.BETA,
+  managerSessionId: '0f1e248e52ae4c2598533059d6a49af4',
+  globalManagerSessionId: '17b373b7e626443aa38040edc9ad07bb',
   branch: 'release/1.4.7',
-  include: [Item.AFR],
-  includeGlobal: [Item.AFR],
+  include: [Item.ACI],
+  includeGlobal: [Item.ACI],
   locale: [
     {
       lang: 'en',

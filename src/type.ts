@@ -32,10 +32,6 @@ export interface Config {
   managerSessionId: string
   /** 国外站开发环境beta token */
   globalManagerSessionId: string
-  /** 国内版生产环境prod token */
-  prodManagerSessionId: string
-  /** 国外版生产环境prod token */
-  prodGlobalManagerSessionId: string
   /** 国内站需要同步的项目，默认全量 */
   include: Item[]
   /** 国外站需要同步的项目，默认全量 */

@@ -6,6 +6,7 @@ import chalk from 'chalk'
 import type { Project } from './type'
 import { Item } from './type'
 import config from './config'
+import { login } from './login'
 
 const gitlab = new Gitlab({
   host: 'http://git.hgj.net',
@@ -49,8 +50,10 @@ async function getRemoteFileContent(projectId: number, filePath: string, branchN
     }
   }
 }
+
+let hasTryLogin = false
 // 国内同步
-async function syncLocaleToRemote(project: string, locale: string, content: string): Promise<void> {
+async function syncLocaleToRemote(project: string, locale: string, content: string, sessionId?: string): Promise<void> {
   const data = {
     locale,
     localeCode: locale,
@@ -60,7 +63,7 @@ async function syncLocaleToRemote(project: string, locale: string, content: stri
 
   const url = isProd() ? 'http://ingress-ng.hgj.com/overseas-manifest-common/admin/locale/set-message' : `http://${config.env}-apisix.hgj.com/overseas-manifest-common/admin/locale/set-message`
   const referer = isProd() ? 'http://manage.hgj.net/' : `http://${config.env}-manage.hgj.net/`
-  const token = isProd() ? config.prodManagerSessionId : config.managerSessionId
+  const token = config.managerSessionId
   try {
     const res = await fetch(url, {
       headers: {
@@ -69,7 +72,7 @@ async function syncLocaleToRemote(project: string, locale: string, content: stri
         'app-key': 'manifest-aci',
         'cache-control': 'no-cache',
         'content-type': 'application/json;charset=UTF-8',
-        'manager-session-id': token,
+        'manager-session-id': sessionId || token,
         'pragma': 'no-cache',
         'Referer': referer,
         'Referrer-Policy': 'strict-origin-when-cross-origin',
@@ -78,16 +81,28 @@ async function syncLocaleToRemote(project: string, locale: string, content: stri
       method: 'POST',
     })
     if (res!.status === 401) {
-      console.log(chalk.red('登录已失效, 请重新配置token'))
-      process.exit()
+      console.log(chalk.red('登录已失效, 尝试登录中...'))
+      if (hasTryLogin)
+        return process.exit()
+      const sessionId = await login(config.env, false)
+      hasTryLogin = true
+      if (sessionId) {
+        config.managerSessionId = sessionId
+        await syncLocaleToRemote(project, locale, content, sessionId)
+      }
+      else {
+        console.log(chalk.red('登录失败, 请重新配置token'))
+        process.exit()
+      }
     }
   }
   catch (error) {
     console.log(error)
   }
 }
+let hasTryLoginGlobal = false
 // 海外版同步
-async function syncGlobalLocaleToRemote(project: string, locale: string, content: string): Promise<void> {
+async function syncGlobalLocaleToRemote(project: string, locale: string, content: string, sessionId?: string): Promise<void> {
   const data = {
     locale,
     localeCode: locale,
@@ -98,7 +113,7 @@ async function syncGlobalLocaleToRemote(project: string, locale: string, content
     ? 'https://manage.globalhgj.com/ingress/overseas-manifest-common/admin/locale/set-message'
     : 'https://dev-ingress.globalhgj.com/overseas-manifest-common/admin/locale/set-message'
   const referer = isProd() ? 'https://manage.globalhgj.com/aci/i18n/page' : 'https://dev-manage.globalhgj.com/'
-  const token = isProd() ? config.prodGlobalManagerSessionId : config.globalManagerSessionId
+  const token = config.globalManagerSessionId
   try {
     const res = await fetch(url, {
       headers: {
@@ -107,7 +122,7 @@ async function syncGlobalLocaleToRemote(project: string, locale: string, content
         'app-key': 'manifest-aci',
         'cache-control': 'no-cache',
         'content-type': 'application/json;charset=UTF-8',
-        'manager-session-id': token,
+        'manager-session-id': sessionId || token,
         'pragma': 'no-cache',
         'priority': 'u=1, i',
         'sec-ch-ua': '"Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"',
@@ -124,8 +139,19 @@ async function syncGlobalLocaleToRemote(project: string, locale: string, content
       method: 'POST',
     })
     if (res!.status === 401) {
-      console.log(chalk.red('登录已失效, 请重新配置token'))
-      process.exit()
+      console.log(chalk.red('登录已失效, 尝试登录中...'))
+      if (hasTryLoginGlobal)
+        return process.exit()
+      const sessionId = await login(config.env, true)
+      hasTryLoginGlobal = true
+      if (sessionId) {
+        config.globalManagerSessionId = sessionId
+        await syncGlobalLocaleToRemote(project, locale, content, sessionId)
+      }
+      else {
+        console.log(chalk.red('登录失败, 请重新配置token'))
+        process.exit()
+      }
     }
   }
   catch (error) {
@@ -135,7 +161,11 @@ async function syncGlobalLocaleToRemote(project: string, locale: string, content
 
 // 根据config 配置同步
 async function syncLocale(): Promise<void> {
-  console.log(chalk.green(`开始同步：${config.env}环境 语言包...\n`))
+  console.log(chalk.green(`开始同步语言包...\n`))
+  console.log(`国内项目：${config.include.length ? config.include : Object.values(Item).join(',')} `)
+  console.log(`海外项目：${config.includeGlobal.length ? config.includeGlobal : Object.values(Item).join(',')}`)
+  console.log(`当前环境：${chalk.green(config.env)}`)
+  console.log(`远程分支：${chalk.green(config.branch)}\n`)
   const projectList = getProjectByConfig()
   for (const project of projectList) {
     const locale = [...config.locale, ...(project.locale ?? [])]
@@ -172,7 +202,7 @@ async function syncLocale(): Promise<void> {
     console.log('\n')
   }
 
-  console.log(chalk.green(`同步结束：${config.env}环境 语言包`))
+  console.log(chalk.green(`同步成功！！！`))
 }
 
 function main(): void {
