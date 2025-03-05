@@ -19,7 +19,7 @@ export async function login(mode = 'dev', isGlobal = false): Promise<string> {
     consola.error(chalk.red('请设置环境变量海管家后台密码：HGJ_USER_NAME'))
     process.exit()
   }
-  let loginUrl = `http://${mode}-manage.hgj.net/unified-web/sign-in`
+  let loginUrl = `http://${mode === Env.PROD ? '' : `${mode}-`}manage.hgj.net/unified-web/sign-in`
   if (isGlobal) {
     if (mode === Env.DEV || mode === Env.BETA) {
       loginUrl = `https://dev-manage.globalhgj.com/unified-web/sign-in`
